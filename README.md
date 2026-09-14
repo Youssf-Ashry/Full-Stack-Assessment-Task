@@ -80,6 +80,17 @@ pnpm seed
 The seed is repeatable — it clears the ProjectFlow collections and reinserts a
 fresh organization, users, projects, tasks and comments.
 
+### Deploying task counters
+
+Before deploying the task-number allocation change to an existing database, build the API and run this idempotent migration once against that database:
+
+```bash
+pnpm --filter @projectflow/api build
+pnpm --filter @projectflow/api migrate:task-counters
+```
+
+The migration sets each project's `nextTaskNumber` to at least one higher than its greatest existing task number (or `1` for an empty project). It never reduces an existing safe counter. Run it before application instances using the new allocator are started; the unique `(projectId, number)` index remains the database safety net.
+
 ## Running the apps
 
 ```bash
@@ -93,9 +104,11 @@ Both apps deliberately avoid the usual 3000/4000 defaults so they do not clash
 with other projects. To move the web app, set `WEB_PORT` in your shell and
 update `WEB_ORIGIN` in `.env` to match, so CORS keeps working:
 
-```bash
-WEB_PORT=3800 pnpm --filter @projectflow/web dev
+```powershell
+$env:WEB_PORT=3800; pnpm --filter @projectflow/web dev
 ```
+
+On POSIX shells, use `WEB_PORT=3800 pnpm --filter @projectflow/web dev`.
 
 The API port comes from `API_PORT` in `.env`; change `NEXT_PUBLIC_API_URL` to
 match if you move it.
@@ -239,11 +252,15 @@ POST   /projects/:projectId/tasks
 GET    /tasks/:taskId
 PATCH  /tasks/:taskId
 PATCH  /tasks/:taskId/status
+PATCH  /tasks/:taskId/assignee
+GET    /tasks/:taskId/activity
 DELETE /tasks/:taskId
 
 GET    /tasks/:taskId/comments
 POST   /tasks/:taskId/comments
 ```
+
+Task numbers are allocated with an atomic `$inc` on a project-local next-number counter and protected by a unique `(projectId, number)` database index. A duplicate-key retry repairs a stale legacy counter from the current maximum before retrying once. Assignment changes are recorded in `task_activities`; the activity endpoint is newest-first and paginated.
 
 Errors share one shape:
 
