@@ -13,6 +13,7 @@ import { ProjectMemberSchema } from '../project-members/schemas/project-member.s
 import { ProjectSchema } from '../projects/schemas/project.schema';
 import { TaskSchema } from '../tasks/schemas/task.schema';
 import { CommentSchema } from '../comments/schemas/comment.schema';
+import { TaskActivitySchema } from '../tasks/schemas/task-activity.schema';
 import { UserSchema } from '../users/schemas/user.schema';
 
 loadEnv({ path: resolve(__dirname, '../../../../.env'), quiet: true });
@@ -28,6 +29,7 @@ const Project = mongoose.model('Project', ProjectSchema);
 const ProjectMember = mongoose.model('ProjectMember', ProjectMemberSchema);
 const Task = mongoose.model('Task', TaskSchema);
 const Comment = mongoose.model('Comment', CommentSchema);
+const TaskActivity = mongoose.model('TaskActivity', TaskActivitySchema);
 
 interface SeedUser {
   name: string;
@@ -49,6 +51,7 @@ async function seed(): Promise<void> {
 
   await Promise.all([
     Comment.deleteMany({}),
+    TaskActivity.deleteMany({}),
     Task.deleteMany({}),
     ProjectMember.deleteMany({}),
     Project.deleteMany({}),
@@ -102,6 +105,7 @@ async function seed(): Promise<void> {
       key: 'ENG',
       description: 'Core internal tooling used by the engineering and delivery teams.',
       createdBy: ammar,
+      nextTaskNumber: 7,
     },
     {
       organizationId: organization._id,
@@ -109,6 +113,7 @@ async function seed(): Promise<void> {
       key: 'WEB',
       description: 'Customer-facing portal for account management and billing.',
       createdBy: sarah,
+      nextTaskNumber: 4,
     },
   ]);
 
