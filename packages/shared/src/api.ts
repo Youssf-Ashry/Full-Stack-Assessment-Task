@@ -50,8 +50,23 @@ export interface TaskSummary {
   priority: TaskPriority;
   commentCount: number;
   createdBy: UserSummary;
+  assignee: UserSummary | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export enum TaskActivityType {
+  TASK_ASSIGNEE_CHANGED = 'TASK_ASSIGNEE_CHANGED',
+}
+
+export interface TaskActivityEntry {
+  id: string;
+  type: TaskActivityType;
+  taskId: string;
+  actor: UserSummary;
+  fromAssignee: UserSummary | null;
+  toAssignee: UserSummary | null;
+  createdAt: string;
 }
 
 export interface TaskDetail extends TaskSummary {

@@ -21,6 +21,10 @@ export class Project {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   createdBy: Types.ObjectId;
 
+  /** Next available project-local task number, allocated atomically. */
+  @Prop({ required: true, default: 1 })
+  nextTaskNumber: number;
+
   createdAt: Date;
   updatedAt: Date;
 }

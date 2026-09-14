@@ -36,6 +36,9 @@ export class Task {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   createdBy: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  assignee?: Types.ObjectId | null;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,5 +46,5 @@ export class Task {
 export const TaskSchema = SchemaFactory.createForClass(Task);
 
 TaskSchema.index({ projectId: 1, status: 1 });
-TaskSchema.index({ projectId: 1, number: 1 });
+TaskSchema.index({ projectId: 1, number: 1 }, { unique: true });
 TaskSchema.index({ createdAt: -1 });

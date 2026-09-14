@@ -146,4 +146,27 @@ describe('Tasks', () => {
     expect(response.body.total).toBe(1);
     expect(response.body.items[0]).toMatchObject({ title: 'Work in flight' });
   });
+
+  it('lets a member assign themselves and records assignment activity', async () => {
+    const task = await request(app.getHttpServer())
+      .post(`/projects/${projectId}/tasks`).set('Authorization', authHeader(member)).send({ title: 'Assignable work' }).expect(201);
+
+    await request(app.getHttpServer())
+      .patch(`/tasks/${task.body.id}/assignee`).set('Authorization', authHeader(member)).send({ assigneeId: member.id }).expect(200);
+
+    const activity = await request(app.getHttpServer())
+      .get(`/tasks/${task.body.id}/activity`).set('Authorization', authHeader(member)).expect(200);
+    expect(activity.body.items[0]).toMatchObject({ actor: { id: member.id }, fromAssignee: null, toAssignee: { id: member.id } });
+  });
+
+  it('prevents a member assigning another member and an outsider changing task status', async () => {
+    const task = await request(app.getHttpServer())
+      .post(`/projects/${projectId}/tasks`).set('Authorization', authHeader(member)).send({ title: 'Protected work' }).expect(201);
+    await request(app.getHttpServer())
+      .patch(`/tasks/${task.body.id}/assignee`).set('Authorization', authHeader(member)).send({ assigneeId: owner.id }).expect(403);
+    await request(app.getHttpServer())
+      .patch(`/tasks/${task.body.id}/status`).set('Authorization', authHeader(outsider)).send({ status: TaskStatus.DONE }).expect(403);
+    await request(app.getHttpServer())
+      .get(`/tasks/${task.body.id}/activity`).set('Authorization', authHeader(outsider)).expect(403);
+  });
 });
